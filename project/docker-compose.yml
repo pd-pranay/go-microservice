@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_DB: user
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  broker-services:
+    build:
+      context: ../broker-service
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - "8080:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  auth-service:
+    build:
+      context: ../authentication-service
+      dockerfile: ./Dockerfile
+    # ports:
+    #   - "5002:80"
+    environment:
+      dbEngine: postgres
+      dbUser: admin
+      dbPassword: password
+      dbName: user
+      dbHost: postgres
+      dbPort: 5432
+      dbSSLMode: disable
+    deploy:
+      mode: replicated
+      replicas: 1
+
+volumes:
+  postgres-data:
+
+

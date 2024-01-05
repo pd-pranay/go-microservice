@@ -1,0 +1,20 @@
+migrate create -ext sql -dir db/migrations -seq create_admin 
+
+sqlc generate
+
+migrate -database "postgres://admin:password@localhost:5432/user?sslmode=disable" -path db/migrations up
+
+
+
+
+
+
+insert into admin ("name","email","password") values ('test','test@email.com','$2a$10$wJ0vv0hJopq8Q9X8ibP0PeBtefPOG41eShk7MXjg52AlPdjzaUQem')
+
+
+
+
+
+migrate create -ext sql -seq create_users
+
+insert into users ("first_name","last_name","email","password", "user_active") values ('test','last','test@email.com','$2a$10$wJ0vv0hJopq8Q9X8ibP0PeBtefPOG41eShk7MXjg52AlPdjzaUQem', 1)
