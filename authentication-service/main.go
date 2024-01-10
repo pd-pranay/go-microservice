@@ -5,6 +5,7 @@ import (
 	"auth/controllers"
 	"auth/db"
 	"auth/routes"
+	"auth/utils"
 	"log"
 	"os"
 
@@ -35,8 +36,8 @@ func main() {
 	defer dbCon.Close()
 
 	queries := db.New(dbCon)
-
-	userController := controllers.NewUsersController(dbCon, queries)
+	httpClient := utils.NewHTTPClient()
+	userController := controllers.NewUsersController(dbCon, queries, httpClient)
 
 	app := fiber.New()
 

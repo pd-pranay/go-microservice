@@ -112,7 +112,7 @@ func (app *App) authenticate(w http.ResponseWriter, a AuthPayload) {
 		return
 	}
 
-	if jsonFromService.Error {
+	if jsonFromService.Error || err != nil {
 		app.errorJSON(w, err, http.StatusUnauthorized)
 		return
 	}

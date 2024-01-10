@@ -39,8 +39,6 @@ services:
     build:
       context: ../authentication-service
       dockerfile: ./Dockerfile
-    # ports:
-    #   - "5002:80"
     environment:
       dbEngine: postgres
       dbUser: admin
@@ -49,6 +47,14 @@ services:
       dbHost: postgres
       dbPort: 5432
       dbSSLMode: disable
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  logger-service:
+    build:
+      context: ../logger-service
+      dockerfile: ./Dockerfile
     deploy:
       mode: replicated
       replicas: 1

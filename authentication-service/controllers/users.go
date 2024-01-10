@@ -3,10 +3,12 @@ package controllers
 import (
 	"auth/db"
 	"auth/utils"
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -14,15 +16,17 @@ import (
 
 // UsersController is a controller and is defined here.
 type UsersController struct {
-	DB      *sql.DB
-	Queries *db.Queries
+	DB         *sql.DB
+	Queries    *db.Queries
+	HttpClient *utils.HTTPClient
 }
 
 // NewUsersController returns pointer to UsersController.
-func NewUsersController(db *sql.DB, queries *db.Queries) *UsersController {
+func NewUsersController(db *sql.DB, queries *db.Queries, httpClient *utils.HTTPClient) *UsersController {
 	return &UsersController{
-		DB:      db,
-		Queries: queries,
+		DB:         db,
+		Queries:    queries,
+		HttpClient: httpClient,
 	}
 }
 
@@ -60,6 +64,15 @@ func (uc *UsersController) Authenticate(c *fiber.Ctx) error {
 		})
 	}
 
+	// log authentication
+	err = uc.logRequest("authentication", fmt.Sprintf("%s logged in", user.Email))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+			"error":   true,
+		})
+	}
+
 	return c.Status(fiber.StatusAccepted).
 		JSON(fiber.Map{
 			"error":   false,
@@ -84,4 +97,49 @@ func (uc *UsersController) PasswordMatches(encoded, plainText string) (bool, err
 	}
 
 	return true, nil
+}
+
+func (uc *UsersController) logRequest(name, data string) error {
+	var entry struct {
+		Name string `json:"name"`
+		Data string `json:"data"`
+	}
+
+	entry.Name = name
+	entry.Data = data
+
+	jsonData, _ := json.MarshalIndent(entry, "", "\t")
+	logServiceURL := "http://logger-service/log"
+
+	response, err := uc.sendPOSTRequest(jsonData, logServiceURL)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusAccepted {
+		return errors.New("Status Code is NoN 202")
+	}
+
+	return nil
+}
+
+func (uc *UsersController) sendPOSTRequest(a any, url string) (*http.Response, error) {
+
+	// create some json we'll send to the auth microservice
+	jsonData, _ := json.MarshalIndent(a, "", "\t")
+
+	// call the service
+	request, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	response, err := uc.HttpClient.Client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }

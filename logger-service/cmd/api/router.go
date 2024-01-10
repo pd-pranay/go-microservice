@@ -23,7 +23,7 @@ func (app *App) routes() http.Handler {
 
 	chiRouter.Use(middleware.Logger)
 	chiRouter.Use(middleware.Heartbeat("/ping"))
-	chiRouter.Post("/", app.WriteLog)
+	chiRouter.Post("/log", app.WriteLog)
 	// chiRouter.Post("/handle", app.HandleSubmission)
 	return chiRouter
 }
