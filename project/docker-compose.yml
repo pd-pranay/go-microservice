@@ -13,6 +13,17 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  mongodb:
+    image: mongo:4.2.16-bionic
+    environment:
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+
   broker-services:
     build:
       context: ../broker-service
@@ -44,5 +55,6 @@ services:
 
 volumes:
   postgres-data:
+  mongodb-data:
 
 
